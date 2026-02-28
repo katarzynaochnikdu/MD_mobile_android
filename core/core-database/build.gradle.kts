@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.md.android.library)
-    alias(libs.plugins.md.hilt)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.md.hilt)   // applies ksp + hilt.android
     alias(libs.plugins.room)
 }
 

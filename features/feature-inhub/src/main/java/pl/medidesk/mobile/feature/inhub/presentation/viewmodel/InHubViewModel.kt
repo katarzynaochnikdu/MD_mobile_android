@@ -10,7 +10,7 @@ import pl.medidesk.mobile.core.model.CheckinResult
 import pl.medidesk.mobile.core.network.MobileApiService
 import pl.medidesk.mobile.core.network.dto.InHubConfigRequest
 import pl.medidesk.mobile.core.network.dto.VerifyPinRequest
-import pl.medidesk.mobile.feature.scanner.domain.usecase.CheckinUseCase
+import pl.medidesk.mobile.core.sync.CheckinUseCase
 import javax.inject.Inject
 
 enum class InHubMode { SETUP, PIN_LOCK, ACTIVE, RESULT }

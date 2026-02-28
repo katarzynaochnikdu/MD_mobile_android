@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.md.android.library)
-    alias(libs.plugins.md.hilt)
-    alias(libs.plugins.ksp)
+    alias(libs.plugins.md.hilt)   // applies ksp + hilt.android
 }
 
 android {
@@ -12,7 +11,7 @@ dependencies {
     implementation(project(":core:core-model"))
     implementation(project(":core:core-datastore"))
 
-    implementation(libs.retrofit)
+    api(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)

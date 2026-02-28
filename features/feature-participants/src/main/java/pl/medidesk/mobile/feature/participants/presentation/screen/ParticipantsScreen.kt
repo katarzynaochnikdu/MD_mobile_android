@@ -98,8 +98,9 @@ private fun ParticipantRow(participant: Participant) {
         Spacer(Modifier.width(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(participant.displayName, style = MaterialTheme.typography.bodyLarge)
-            if (!participant.company.isNullOrBlank()) {
-                Text(participant.company, style = MaterialTheme.typography.bodyMedium,
+            val company = participant.company
+            if (!company.isNullOrBlank()) {
+                Text(company, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Text(participant.ticketName ?: "", style = MaterialTheme.typography.bodySmall,

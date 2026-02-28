@@ -22,8 +22,10 @@ dependencies {
     compileOnly(libs.plugins.android.library.toDep())
     compileOnly(libs.plugins.kotlin.android.toDep())
     compileOnly(libs.plugins.kotlin.compose.toDep())
-    compileOnly(libs.plugins.hilt.toDep())
-    compileOnly(libs.plugins.ksp.toDep())
+    // Note: hilt and ksp are intentionally NOT here.
+    // They live only in the root build.gradle.kts with apply false (root classloader).
+    // Adding them here would put KSP in a second classloader, causing
+    // ClassNotFoundException: KspTaskJvm when Hilt tries to integrate with KSP.
 }
 
 fun Provider<PluginDependency>.toDep() = map {

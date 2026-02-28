@@ -79,8 +79,9 @@ private fun WalkinRow(walkin: WalkinParticipant) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text("${walkin.firstName} ${walkin.lastName}", style = MaterialTheme.typography.bodyLarge)
-            if (!walkin.company.isNullOrBlank()) {
-                Text(walkin.company, style = MaterialTheme.typography.bodyMedium,
+            val company = walkin.company
+            if (!company.isNullOrBlank()) {
+                Text(company, style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }

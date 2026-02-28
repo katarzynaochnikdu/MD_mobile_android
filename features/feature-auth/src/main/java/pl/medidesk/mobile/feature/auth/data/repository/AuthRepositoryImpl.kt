@@ -17,11 +17,12 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.login(LoginRequest(email, password))
             val body = response.body()
-            if (response.isSuccessful && body?.success == true && body.token != null && body.user != null) {
-                val user = body.user
-                authDataStore.saveToken(body.token)
-                authDataStore.saveUserInfo(user.id, user.email, user.firstName, user.lastName, user.role)
-                Result.success(User(user.id, user.email, user.firstName, user.lastName, user.role))
+            val token = body?.token
+            val userDto = body?.user
+            if (response.isSuccessful && body?.success == true && token != null && userDto != null) {
+                authDataStore.saveToken(token)
+                authDataStore.saveUserInfo(userDto.id, userDto.email, userDto.firstName, userDto.lastName, userDto.role)
+                Result.success(User(userDto.id, userDto.email, userDto.firstName, userDto.lastName, userDto.role))
             } else {
                 Result.failure(Exception(body?.error ?: "Błąd logowania"))
             }

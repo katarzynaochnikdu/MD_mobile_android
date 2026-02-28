@@ -11,7 +11,7 @@ import kotlinx.coroutines.launch
 import pl.medidesk.mobile.core.model.CheckinResult
 import pl.medidesk.mobile.core.model.SyncState
 import pl.medidesk.mobile.core.sync.SyncEngine
-import pl.medidesk.mobile.feature.scanner.domain.usecase.CheckinUseCase
+import pl.medidesk.mobile.core.sync.CheckinUseCase
 import javax.inject.Inject
 
 enum class ScanFeedback { NONE, PROCESSING, SUCCESS, DUPLICATE, ERROR, NOT_FOUND }

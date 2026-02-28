@@ -1,4 +1,4 @@
-package pl.medidesk.mobile.feature.scanner.domain.usecase
+package pl.medidesk.mobile.core.sync
 
 import pl.medidesk.mobile.core.model.CheckinResult
 import pl.medidesk.mobile.core.network.MobileApiService
@@ -22,8 +22,9 @@ class CheckinUseCase @Inject constructor(
             val response = apiService.checkin(CheckinRequest(ticketId, eventId, scannedAt))
             val body = response.body()
             if (response.isSuccessful && body != null) {
-                if (body.success && body.checkedInAt != null) {
-                    participantDao.markCheckedIn(ticketId, body.checkedInAt)
+                val checkedInAt = body.checkedInAt
+                if (body.success && checkedInAt != null) {
+                    participantDao.markCheckedIn(ticketId, checkedInAt)
                 }
                 CheckinResult(
                     success = body.success,
@@ -35,11 +36,9 @@ class CheckinUseCase @Inject constructor(
                     error = body.error
                 )
             } else {
-                // Network error — try local lookup then queue
                 localCheckin(ticketId, eventId, scannedAt)
             }
         } catch (e: Exception) {
-            // Offline — queue for later sync
             localCheckin(ticketId, eventId, scannedAt)
         }
     }
