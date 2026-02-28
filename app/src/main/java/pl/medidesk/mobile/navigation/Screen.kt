@@ -2,6 +2,7 @@ package pl.medidesk.mobile.navigation
 
 sealed class Screen(val route: String) {
     data object Login : Screen("login")
+    data object RoleSelection : Screen("role_selection")
     data object Events : Screen("events")
     data object Main : Screen("main/{eventId}") {
         fun createRoute(eventId: String) = "main/$eventId"

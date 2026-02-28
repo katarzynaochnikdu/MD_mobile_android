@@ -27,6 +27,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import pl.medidesk.mobile.feature.auth.presentation.screen.LoginScreen
+import pl.medidesk.mobile.feature.auth.presentation.screen.RoleSelectionScreen
 import pl.medidesk.mobile.feature.dashboard.presentation.screen.DashboardScreen
 import pl.medidesk.mobile.feature.events.presentation.screen.EventsScreen
 import pl.medidesk.mobile.feature.inhub.presentation.screen.InHubScreen
@@ -62,8 +63,18 @@ fun AppNavHost() {
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.Events.route) {
+                    navController.navigate(Screen.RoleSelection.route) {
                         popUpTo(Screen.Login.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.RoleSelection.route) {
+            RoleSelectionScreen(
+                onOrganizerSelected = {
+                    navController.navigate(Screen.Events.route) {
+                        popUpTo(Screen.RoleSelection.route) { inclusive = false }
                     }
                 }
             )
