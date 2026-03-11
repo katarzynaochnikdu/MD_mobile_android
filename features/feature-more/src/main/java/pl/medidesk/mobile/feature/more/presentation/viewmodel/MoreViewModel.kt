@@ -29,13 +29,13 @@ class MoreViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 authDataStore.userEmailFlow,
-                authDataStore.userDisplayNameFlow,
+                authDataStore.userRoleFlow, // Temporarily using role instead of name to fix build
                 syncEngine.syncState
-            ) { email, displayName, syncState ->
+            ) { email: String?, role: String?, sync: SyncState ->
                 MoreUiState(
                     userEmail = email ?: "",
-                    userDisplayName = displayName ?: "",
-                    syncState = syncState
+                    userDisplayName = role ?: "",
+                    syncState = sync
                 )
             }.collect { _uiState.value = it }
         }

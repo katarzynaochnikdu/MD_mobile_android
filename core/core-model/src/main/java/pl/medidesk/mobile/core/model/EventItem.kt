@@ -6,5 +6,6 @@ data class EventItem(
     val status: String,
     val startDate: String,
     val endDate: String,
-    val venue: String
+    val venue: String,
+    val imageUrl: String? = null
 )

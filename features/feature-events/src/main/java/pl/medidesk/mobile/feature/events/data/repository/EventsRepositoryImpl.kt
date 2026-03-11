@@ -13,7 +13,15 @@ class EventsRepositoryImpl @Inject constructor(
         val body = response.body()
         if (response.isSuccessful && body != null) {
             Result.success(body.events.map { dto ->
-                EventItem(dto.eventId, dto.eventName, dto.status, dto.startDate, dto.endDate, dto.venue)
+                EventItem(
+                    eventId = dto.eventId ?: dto.id ?: "",
+                    eventName = dto.eventName ?: dto.name ?: dto.title ?: "Wydarzenie",
+                    status = dto.status ?: "active",
+                    startDate = dto.startDate ?: dto.startsAt ?: dto.startAt ?: dto.date ?: dto.start ?: dto.startTime ?: dto.eventDate ?: "",
+                    endDate = dto.endDate ?: "",
+                    venue = dto.venue ?: dto.location ?: dto.address ?: "",
+                    imageUrl = dto.imageUrl ?: dto.image ?: dto.thumbnail
+                )
             })
         } else {
             Result.failure(Exception("Błąd pobierania eventów"))

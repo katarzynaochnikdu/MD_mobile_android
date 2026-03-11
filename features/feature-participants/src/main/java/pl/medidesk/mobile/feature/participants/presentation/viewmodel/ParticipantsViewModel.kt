@@ -7,23 +7,31 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import pl.medidesk.mobile.core.database.dao.ParticipantDao
+import pl.medidesk.mobile.core.database.dao.TicketClassDao
 import pl.medidesk.mobile.core.model.Participant
 import pl.medidesk.mobile.core.model.SyncState
+import pl.medidesk.mobile.core.model.TicketClass
 import pl.medidesk.mobile.core.sync.SyncEngine
+import java.time.Instant
 import javax.inject.Inject
 
 data class ParticipantsUiState(
     val participants: List<Participant> = emptyList(),
     val filteredParticipants: List<Participant> = emptyList(),
+    val ticketClasses: List<TicketClass> = emptyList(),
     val searchQuery: String = "",
-    val filterCheckedIn: Boolean? = null,  // null = all, true = checked-in, false = not checked-in
+    val filterCheckedIn: Boolean? = null,
+    val selectedTicketClassId: String? = null,
     val syncState: SyncState = SyncState(),
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val checkinDialogParticipant: Participant? = null,
+    val checkoutDialogParticipant: Participant? = null
 )
 
 @HiltViewModel
 class ParticipantsViewModel @Inject constructor(
     private val participantDao: ParticipantDao,
+    private val ticketClassDao: TicketClassDao,
     private val syncEngine: SyncEngine,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -37,21 +45,50 @@ class ParticipantsViewModel @Inject constructor(
         viewModelScope.launch {
             participantDao.getParticipantsFlow(eventId).collect { entities ->
                 val participants = entities.map { e ->
-                    Participant(e.id, e.backstageTicketId, e.firstName, e.lastName, e.email,
-                        e.company, e.ticketClassId, e.ticketName, e.status, e.attendanceStatus,
-                        e.eventOrderId, e.eventId, e.checkedInAt, e.isWalkin)
+                    Participant(
+                        id = e.id,
+                        backstageTicketId = e.backstageTicketId,
+                        firstName = e.firstName,
+                        lastName = e.lastName,
+                        email = e.email,
+                        phone = e.phone,
+                        company = e.company,
+                        ticketClassId = e.ticketClassId,
+                        ticketName = e.ticketName,
+                        status = e.status,
+                        attendanceStatus = e.attendanceStatus,
+                        eventOrderId = e.eventOrderId,
+                        eventId = e.eventId,
+                        checkedInAt = e.checkedInAt,
+                        isWalkin = e.isWalkin,
+                        tags = e.tags?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
+                        buyerName = e.buyerName,
+                        buyerEmail = e.buyerEmail
+                    )
                 }
                 val current = _uiState.value
                 _uiState.value = current.copy(
                     participants = participants,
-                    filteredParticipants = applyFilters(participants, current.searchQuery, current.filterCheckedIn)
+                    filteredParticipants = applyFilters(participants, current.searchQuery, current.filterCheckedIn, current.selectedTicketClassId)
                 )
             }
         }
+        
+        viewModelScope.launch {
+            ticketClassDao.getTicketClassesFlow(eventId).collect { entities ->
+                val classes = entities.map { TicketClass(it.ticketClassId, it.ticketName, it.eventId) }
+                _uiState.value = _uiState.value.copy(ticketClasses = classes)
+            }
+        }
+
         viewModelScope.launch {
             syncEngine.syncState.collect { syncState ->
                 _uiState.value = _uiState.value.copy(syncState = syncState)
             }
+        }
+
+        if (eventId.isNotEmpty()) {
+            refresh(eventId)
         }
     }
 
@@ -59,7 +96,7 @@ class ParticipantsViewModel @Inject constructor(
         val current = _uiState.value
         _uiState.value = current.copy(
             searchQuery = query,
-            filteredParticipants = applyFilters(current.participants, query, current.filterCheckedIn)
+            filteredParticipants = applyFilters(current.participants, query, current.filterCheckedIn, current.selectedTicketClassId)
         )
     }
 
@@ -67,7 +104,15 @@ class ParticipantsViewModel @Inject constructor(
         val current = _uiState.value
         _uiState.value = current.copy(
             filterCheckedIn = filter,
-            filteredParticipants = applyFilters(current.participants, current.searchQuery, filter)
+            filteredParticipants = applyFilters(current.participants, current.searchQuery, filter, current.selectedTicketClassId)
+        )
+    }
+    
+    fun onFilterTicketClass(classId: String?) {
+        val current = _uiState.value
+        _uiState.value = current.copy(
+            selectedTicketClassId = classId,
+            filteredParticipants = applyFilters(current.participants, current.searchQuery, current.filterCheckedIn, classId)
         )
     }
 
@@ -75,28 +120,69 @@ class ParticipantsViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(isRefreshing = true)
         syncEngine.triggerImmediateSync(eventId)
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1500)
+            kotlinx.coroutines.delay(1000)
             _uiState.value = _uiState.value.copy(isRefreshing = false)
+        }
+    }
+
+    // Manual Actions
+    fun showCheckinDialog(participant: Participant) {
+        _uiState.value = _uiState.value.copy(checkinDialogParticipant = participant)
+    }
+    
+    fun showCheckoutDialog(participant: Participant) {
+        _uiState.value = _uiState.value.copy(checkoutDialogParticipant = participant)
+    }
+    
+    fun dismissDialogs() {
+        _uiState.value = _uiState.value.copy(checkinDialogParticipant = null, checkoutDialogParticipant = null)
+    }
+
+    fun performManualCheckin(participant: Participant) {
+        viewModelScope.launch {
+            participant.backstageTicketId?.let { ticketId ->
+                val now = Instant.now().toString()
+                participantDao.markCheckedIn(ticketId, now)
+                // In a real app we'd also push this to the sync queue
+            }
+            dismissDialogs()
+        }
+    }
+    
+    fun performManualCheckout(participant: Participant) {
+        viewModelScope.launch {
+            participant.backstageTicketId?.let { ticketId ->
+                // Clear check-in status
+                participantDao.markCheckedOut(ticketId) // We need this in DAO
+            }
+            dismissDialogs()
         }
     }
 
     private fun applyFilters(
         all: List<Participant>,
         query: String,
-        checkedInFilter: Boolean?
+        checkedInFilter: Boolean?,
+        classIdFilter: String?
     ): List<Participant> {
         return all.filter { p ->
             val matchesQuery = query.isBlank() ||
                 p.displayName.contains(query, ignoreCase = true) ||
                 p.email?.contains(query, ignoreCase = true) == true ||
                 p.company?.contains(query, ignoreCase = true) == true ||
-                p.backstageTicketId.contains(query, ignoreCase = true)
-            val matchesFilter = when (checkedInFilter) {
+                p.backstageTicketId?.contains(query, ignoreCase = true) == true ||
+                p.buyerName?.contains(query, ignoreCase = true) == true ||
+                p.tags.any { it.contains(query, ignoreCase = true) }
+            
+            val matchesChecked = when (checkedInFilter) {
                 true -> p.isCheckedIn
                 false -> !p.isCheckedIn
                 null -> true
             }
-            matchesQuery && matchesFilter
+            
+            val matchesClass = classIdFilter == null || p.ticketClassId == classIdFilter
+            
+            matchesQuery && matchesChecked && matchesClass
         }
     }
 }

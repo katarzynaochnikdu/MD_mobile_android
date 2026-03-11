@@ -1,11 +1,11 @@
 package pl.medidesk.mobile.core.sync
 
 import android.content.Context
+import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import kotlinx.coroutines.flow.firstOrNull
 import pl.medidesk.mobile.core.database.dao.OfflineCheckinDao
 import pl.medidesk.mobile.core.database.dao.ParticipantDao
 import pl.medidesk.mobile.core.database.dao.SyncMetadataDao
@@ -34,6 +34,7 @@ class SyncWorker @AssistedInject constructor(
         const val KEY_EVENT_ID = "event_id"
         const val WORK_NAME_PERIODIC = "md_sync_periodic"
         const val WORK_NAME_IMMEDIATE = "md_sync_immediate"
+        private const val TAG = "SyncWorker"
 
         fun periodicWorkRequest(): PeriodicWorkRequest =
             PeriodicWorkRequestBuilder<SyncWorker>(5, java.util.concurrent.TimeUnit.MINUTES)
@@ -58,13 +59,37 @@ class SyncWorker @AssistedInject constructor(
 
     override suspend fun doWork(): Result {
         val eventId = inputData.getString(KEY_EVENT_ID) ?: return Result.failure()
-        return try {
+        
+        var hasError = false
+
+        // 1. Pull Participants (CRITICAL)
+        try {
             pullParticipants(eventId)
-            pushCheckins(eventId)
-            pushWalkins()
-            Result.success()
         } catch (e: Exception) {
+            Log.e(TAG, "Error pulling participants", e)
+            hasError = true
+        }
+
+        // 2. Push Checkins (NON-CRITICAL)
+        try {
+            pushCheckins(eventId)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error pushing checkins", e)
+            hasError = true
+        }
+
+        // 3. Push Walkins (NON-CRITICAL)
+        try {
+            pushWalkins()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error pushing walkins", e)
+            hasError = true
+        }
+
+        return if (hasError) {
             if (runAttemptCount < 3) Result.retry() else Result.failure()
+        } else {
+            Result.success()
         }
     }
 
@@ -72,10 +97,16 @@ class SyncWorker @AssistedInject constructor(
         val meta = syncMetadataDao.get(eventId)
         val since = meta?.lastParticipantsSync
 
+        Log.d(TAG, "Pulling participants for $eventId since $since")
         val response = apiService.getParticipants(eventId, since)
-        if (!response.isSuccessful) return
+        if (!response.isSuccessful) {
+            Log.e(TAG, "Failed to fetch participants: ${response.code()}")
+            throw Exception("Network error")
+        }
 
         val body = response.body() ?: return
+        Log.d(TAG, "Fetched ${body.participants.size} participants")
+        
         val entities = body.participants.map { dto ->
             ParticipantEntity(
                 id = dto.id,
@@ -83,6 +114,7 @@ class SyncWorker @AssistedInject constructor(
                 firstName = dto.firstName,
                 lastName = dto.lastName,
                 email = dto.email,
+                phone = dto.phone,
                 company = dto.company,
                 ticketClassId = dto.ticketClassId,
                 ticketName = dto.ticketName,
@@ -91,32 +123,36 @@ class SyncWorker @AssistedInject constructor(
                 eventOrderId = dto.eventOrderId,
                 eventId = eventId,
                 checkedInAt = dto.checkedInAt,
-                isWalkin = dto.isWalkin
+                isWalkin = dto.isWalkin,
+                tags = dto.tags?.joinToString(","),
+                buyerName = dto.buyerName,
+                buyerEmail = dto.buyerEmail
             )
         }
 
         if (since == null) {
             participantDao.replaceAll(eventId, entities)
         } else {
-            participantDao.insertAll(entities) // upsert (REPLACE)
+            participantDao.insertAll(entities)
         }
 
         val now = Instant.now().toString()
-        val currentMeta = syncMetadataDao.get(eventId)
-        if (currentMeta == null) {
+        if (meta == null) {
             syncMetadataDao.upsert(SyncMetadataEntity(eventId = eventId, lastParticipantsSync = now))
         } else {
             syncMetadataDao.updateParticipantsSync(eventId, now)
         }
+        Log.d(TAG, "Successfully updated local database with ${entities.size} participants")
     }
 
     private suspend fun pushCheckins(eventId: String) {
         val unsynced = offlineCheckinDao.getUnsynced().filter { it.eventId == eventId }
         if (unsynced.isEmpty()) return
 
-        val items = unsynced.map { e ->
+        val items = unsynced.mapNotNull { e ->
+            val ticketId = e.backstageTicketId ?: return@mapNotNull null
             CheckinSyncItem(
-                backstageTicketId = e.backstageTicketId,
+                backstageTicketId = ticketId,
                 eventId = e.eventId,
                 scannedAt = e.scannedAt,
                 deviceId = e.deviceId,
@@ -124,10 +160,14 @@ class SyncWorker @AssistedInject constructor(
             )
         }
 
+        if (items.isEmpty()) return
+
         val response = apiService.syncCheckins(CheckinSyncRequest(items))
         if (response.isSuccessful) {
             offlineCheckinDao.markAllSyncedForEvent(eventId)
             syncMetadataDao.updateCheckinPush(eventId, Instant.now().toString())
+        } else {
+             Log.e(TAG, "Failed to push checkins: ${response.code()}")
         }
     }
 
@@ -153,6 +193,8 @@ class SyncWorker @AssistedInject constructor(
         val response = apiService.syncWalkins(WalkinBatchRequest(items))
         if (response.isSuccessful) {
             walkinDao.markAllSynced()
+        } else {
+            Log.e(TAG, "Failed to push walkins: ${response.code()}")
         }
     }
 }

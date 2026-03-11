@@ -1,11 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="GradleMigrationSettings" migrationVersion="1" />
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
+        <compositeConfiguration>
+          <compositeBuild compositeDefinitionSource="SCRIPT">
+            <builds>
+              <build path="$PROJECT_DIR$/build-logic" name="build-logic">
+                <projects>
+                  <project path="$PROJECT_DIR$/build-logic" />
+                  <project path="$PROJECT_DIR$/build-logic/convention" />
+                </projects>
+              </build>
+            </builds>
+          </compositeBuild>
+        </compositeConfiguration>
         <option name="testRunner" value="CHOOSE_PER_TEST" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleJvm" value="#GRADLE_LOCAL_JAVA_HOME" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/build-logic" />
+            <option value="$PROJECT_DIR$/build-logic/convention" />
+            <option value="$PROJECT_DIR$/core" />
+            <option value="$PROJECT_DIR$/core/core-database" />
+            <option value="$PROJECT_DIR$/core/core-datastore" />
+            <option value="$PROJECT_DIR$/core/core-model" />
+            <option value="$PROJECT_DIR$/core/core-network" />
+            <option value="$PROJECT_DIR$/core/core-sync" />
+            <option value="$PROJECT_DIR$/core/core-ui" />
+            <option value="$PROJECT_DIR$/features" />
+            <option value="$PROJECT_DIR$/features/feature-auth" />
+            <option value="$PROJECT_DIR$/features/feature-dashboard" />
+            <option value="$PROJECT_DIR$/features/feature-events" />
+            <option value="$PROJECT_DIR$/features/feature-inhub" />
+            <option value="$PROJECT_DIR$/features/feature-more" />
+            <option value="$PROJECT_DIR$/features/feature-participants" />
+            <option value="$PROJECT_DIR$/features/feature-scanner" />
+            <option value="$PROJECT_DIR$/features/feature-walkin" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>

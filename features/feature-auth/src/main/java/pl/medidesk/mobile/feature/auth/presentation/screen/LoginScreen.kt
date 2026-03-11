@@ -1,8 +1,10 @@
 package pl.medidesk.mobile.feature.auth.presentation.screen
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -24,28 +26,32 @@ import pl.medidesk.mobile.feature.auth.presentation.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
+    role: String,
     onLoginSuccess: () -> Unit,
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var passwordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) onLoginSuccess()
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp, vertical = 48.dp)
         ) {
+            Spacer(modifier = Modifier.height(40.dp))
+            
             Text(
                 text = "Medidesk Mobile",
                 style = MaterialTheme.typography.headlineMedium,
@@ -53,12 +59,12 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                text = "Panel organizatora",
+                text = if (role == "ORGANIZER") "Panel organizatora" else "Panel uczestnika",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = uiState.email,
@@ -75,6 +81,8 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 isError = uiState.error != null
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = uiState.password,
@@ -100,6 +108,7 @@ fun LoginScreen(
             )
 
             if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = uiState.error!!,
                     color = MaterialTheme.colorScheme.error,
@@ -107,17 +116,22 @@ fun LoginScreen(
                 )
             }
 
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
                 onClick = viewModel::login,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 enabled = !uiState.isLoading
             ) {
                 if (uiState.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                    CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
                 } else {
                     Text("Zaloguj się", style = MaterialTheme.typography.labelLarge)
                 }
             }
+            
+            // Extra spacer to allow scrolling above the keyboard
+            Spacer(modifier = Modifier.height(200.dp))
         }
     }
 }

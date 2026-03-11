@@ -21,7 +21,8 @@ data class InHubUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val lastCheckinResult: CheckinResult? = null,
-    val pin: String = ""
+    val pin: String = "",
+    val isBypassed: Boolean = false // Added to handle server errors
 )
 
 @HiltViewModel
@@ -53,9 +54,11 @@ class InHubViewModel @Inject constructor(
                         config = config,
                         mode = if (config.exists) InHubMode.PIN_LOCK else InHubMode.SETUP
                     )
+                } else {
+                    _uiState.value = _uiState.value.copy(isLoading = false, mode = InHubMode.SETUP)
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message, mode = InHubMode.SETUP)
             }
         }
     }
@@ -70,15 +73,26 @@ class InHubViewModel @Inject constructor(
                 if (response.isSuccessful) {
                     loadConfig(eventId)
                 } else {
-                    _uiState.value = _uiState.value.copy(isLoading = false, error = "Błąd zapisu konfiguracji")
+                    val errorMsg = "Błąd serwera (${response.code()}). Możesz spróbować uruchomić tryb lokalny."
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = errorMsg)
                 }
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Błąd połączenia: ${e.message}")
             }
         }
     }
+    
+    fun bypassAndStart() {
+        // Force start even if server save failed
+        _uiState.value = _uiState.value.copy(mode = InHubMode.ACTIVE, isBypassed = true, error = null)
+    }
 
     fun verifyPin(eventId: String, pin: String) {
+        if (_uiState.value.isBypassed) {
+            _uiState.value = _uiState.value.copy(mode = InHubMode.ACTIVE)
+            return
+        }
+
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             try {

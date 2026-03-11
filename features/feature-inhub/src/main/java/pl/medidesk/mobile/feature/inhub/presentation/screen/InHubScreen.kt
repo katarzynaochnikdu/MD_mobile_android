@@ -6,6 +6,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +41,8 @@ fun InHubScreen(
             error = uiState.error,
             onSave = { pin, autoCheckin, showSearch, showWalkin ->
                 viewModel.saveConfig(eventId, pin, autoCheckin, showSearch, showWalkin)
-            }
+            },
+            onBypass = viewModel::bypassAndStart
         )
         InHubMode.PIN_LOCK -> PinLockScreen(
             pin = uiState.pin,
@@ -110,7 +112,8 @@ private fun PinLockScreen(
 @Composable
 private fun InHubSetupScreen(
     isLoading: Boolean, error: String?,
-    onSave: (String, Boolean, Boolean, Boolean) -> Unit
+    onSave: (String, Boolean, Boolean, Boolean) -> Unit,
+    onBypass: () -> Unit
 ) {
     var pin by remember { mutableStateOf("") }
     var autoCheckin by remember { mutableStateOf(true) }
@@ -138,7 +141,26 @@ private fun InHubSetupScreen(
                 Text("Rejestracja walk-in")
                 Switch(checked = showWalkin, onCheckedChange = { showWalkin = it })
             }
-            if (error != null) Text(error, color = MaterialTheme.colorScheme.error)
+            
+            if (error != null) {
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(Modifier.padding(12.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, null, tint = Color.Red, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text("Błąd serwera", fontWeight = FontWeight.Bold, color = Color.Red)
+                        }
+                        Text(error, style = MaterialTheme.typography.bodySmall, color = Color.DarkGray)
+                        TextButton(onClick = onBypass, modifier = Modifier.align(Alignment.End)) {
+                            Text("Uruchom mimo błędu (tryb lokalny)")
+                        }
+                    }
+                }
+            }
+
             Button(
                 onClick = { onSave(pin, autoCheckin, showSearch, showWalkin) },
                 enabled = pin.length >= 4 && !isLoading,
@@ -158,7 +180,6 @@ private fun InHubActiveScreen(
     onLock: () -> Unit
 ) {
     Box(Modifier.fillMaxSize()) {
-        // QR scanning view (reused from ScannerScreen CameraPreview)
         Text(
             "InHub Mode — AKTYWNY\nSkanuj QR kod...",
             modifier = Modifier.align(Alignment.Center),

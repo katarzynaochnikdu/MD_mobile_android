@@ -54,6 +54,8 @@ dependencies {
     implementation(project(":features:feature-walkin"))
     implementation(project(":features:feature-inhub"))
     implementation(project(":features:feature-more"))
+    implementation(project(":features:feature-speakers"))
+    implementation(project(":features:feature-sponsors"))
 
     // Core Android
     implementation(libs.core.ktx)

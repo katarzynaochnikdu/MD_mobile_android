@@ -14,10 +14,11 @@ import androidx.room.PrimaryKey
 )
 data class ParticipantEntity(
     @PrimaryKey val id: Long,
-    @ColumnInfo(name = "backstage_ticket_id") val backstageTicketId: String,
+    @ColumnInfo(name = "backstage_ticket_id") val backstageTicketId: String?,
     @ColumnInfo(name = "first_name") val firstName: String?,
     @ColumnInfo(name = "last_name") val lastName: String?,
     val email: String?,
+    val phone: String?,
     val company: String?,
     @ColumnInfo(name = "ticket_class_id") val ticketClassId: String?,
     @ColumnInfo(name = "ticket_name") val ticketName: String?,
@@ -26,5 +27,8 @@ data class ParticipantEntity(
     @ColumnInfo(name = "event_order_id") val eventOrderId: String?,
     @ColumnInfo(name = "event_id") val eventId: String,
     @ColumnInfo(name = "checked_in_at") val checkedInAt: String?,
-    @ColumnInfo(name = "is_walkin") val isWalkin: Boolean = false
+    @ColumnInfo(name = "is_walkin") val isWalkin: Boolean = false,
+    val tags: String? = null, // Comma separated
+    @ColumnInfo(name = "buyer_name") val buyerName: String? = null,
+    @ColumnInfo(name = "buyer_email") val buyerEmail: String? = null
 )

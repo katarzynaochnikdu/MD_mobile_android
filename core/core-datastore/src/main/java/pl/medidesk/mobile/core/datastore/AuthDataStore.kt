@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,12 +22,17 @@ class AuthDataStore @Inject constructor(
     private val tokenKey = stringPreferencesKey("jwt_token")
     private val userEmailKey = stringPreferencesKey("user_email")
     private val userDisplayNameKey = stringPreferencesKey("user_display_name")
+    private val userFirstNameKey = stringPreferencesKey("user_first_name")
+    private val userLastNameKey = stringPreferencesKey("user_last_name")
     private val userRoleKey = stringPreferencesKey("user_role")
     private val userIdKey = stringPreferencesKey("user_id")
 
     val tokenFlow: Flow<String?> = context.dataStore.data.map { it[tokenKey] }
+    val userIdFlow: Flow<String?> = context.dataStore.data.map { it[userIdKey] }
     val userEmailFlow: Flow<String?> = context.dataStore.data.map { it[userEmailKey] }
-    val userDisplayNameFlow: Flow<String?> = context.dataStore.data.map { it[userDisplayNameKey] }
+    val userFirstNameFlow: Flow<String?> = context.dataStore.data.map { it[userFirstNameKey] }
+    val userLastNameFlow: Flow<String?> = context.dataStore.data.map { it[userLastNameKey] }
+    val userRoleFlow: Flow<String?> = context.dataStore.data.map { it[userRoleKey] }
 
     suspend fun saveToken(token: String) {
         context.dataStore.edit { it[tokenKey] = token }
@@ -37,6 +43,8 @@ class AuthDataStore @Inject constructor(
             prefs[userIdKey] = id.toString()
             prefs[userEmailKey] = email
             prefs[userDisplayNameKey] = "$firstName $lastName"
+            prefs[userFirstNameKey] = firstName
+            prefs[userLastNameKey] = lastName
             prefs[userRoleKey] = role
         }
     }
@@ -45,10 +53,5 @@ class AuthDataStore @Inject constructor(
         context.dataStore.edit { it.clear() }
     }
 
-    suspend fun getToken(): String? =
-        context.dataStore.data.map { it[tokenKey] }.let { flow ->
-            var result: String? = null
-            flow.collect { result = it }
-            result
-        }
+    suspend fun getToken(): String? = tokenFlow.firstOrNull()
 }

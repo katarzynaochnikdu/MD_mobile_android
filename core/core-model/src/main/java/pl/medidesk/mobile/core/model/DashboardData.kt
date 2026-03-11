@@ -7,9 +7,14 @@ data class DashboardData(
     val checkedIn: Int,
     val walkIns: Int,
     val checkInRate: Double,
-    val byTicketClass: List<TicketClassStat>,
-    val timeline: List<TimelineEntry>,
-    val topScanners: List<ScannerStat>
+    val byTicketClass: List<TicketClassStat> = emptyList(),
+    val timeline: List<TimelineEntry> = emptyList(),
+    val topScanners: List<ScannerStat> = emptyList(),
+    val recentCheckins: List<Participant> = emptyList(),
+    val eventName: String = "",
+    val startDate: String = "",
+    val venue: String = "",
+    val imageUrl: String? = null // Dodane dla nagłówka Dashboardu
 )
 
 data class TicketClassStat(

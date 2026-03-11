@@ -1,5 +1,6 @@
 package pl.medidesk.mobile.feature.participants.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -24,27 +25,47 @@ class ParticipantDetailsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val participantId: Long = savedStateHandle.get<Long>("participantId") ?: -1L
+    private val participantId: Long? = savedStateHandle.get<Long>("participantId")
 
     private val _uiState = MutableStateFlow<ParticipantDetailsUiState>(ParticipantDetailsUiState.Loading)
     val uiState: StateFlow<ParticipantDetailsUiState> = _uiState.asStateFlow()
+
+    init {
+        Log.d("ParticipantDetails", "Init with ID: $participantId")
+        participantId?.let { loadParticipant(it) } ?: run {
+            _uiState.value = ParticipantDetailsUiState.Error("Błędne ID uczestnika")
+        }
+    }
 
     fun loadParticipant(id: Long) {
         viewModelScope.launch {
             _uiState.value = ParticipantDetailsUiState.Loading
             try {
-                val entity = participantDao.getParticipantById(id) // Potrzebujemy nowej metody w DAO
+                val entity = participantDao.getParticipantById(id)
                 if (entity != null) {
                     _uiState.value = ParticipantDetailsUiState.Success(
-                        Participant(entity.id, entity.backstageTicketId, entity.firstName, entity.lastName, entity.email,
-                            entity.company, entity.ticketClassId, entity.ticketName, entity.status, entity.attendanceStatus,
-                            entity.eventOrderId, entity.eventId, entity.checkedInAt, entity.isWalkin)
+                        Participant(
+                            id = entity.id,
+                            backstageTicketId = entity.backstageTicketId,
+                            firstName = entity.firstName,
+                            lastName = entity.lastName,
+                            email = entity.email,
+                            company = entity.company,
+                            ticketClassId = entity.ticketClassId,
+                            ticketName = entity.ticketName,
+                            status = entity.status,
+                            attendanceStatus = entity.attendanceStatus,
+                            eventOrderId = entity.eventOrderId,
+                            eventId = entity.eventId,
+                            checkedInAt = entity.checkedInAt,
+                            isWalkin = entity.isWalkin
+                        )
                     )
                 } else {
-                    _uiState.value = ParticipantDetailsUiState.Error("Uczestnik nie znaleziony")
+                    _uiState.value = ParticipantDetailsUiState.Error("Nie znaleziono uczestnika w bazie")
                 }
             } catch (e: Exception) {
-                _uiState.value = ParticipantDetailsUiState.Error(e.message ?: "Błąd")
+                _uiState.value = ParticipantDetailsUiState.Error(e.message ?: "Błąd bazy danych")
             }
         }
     }

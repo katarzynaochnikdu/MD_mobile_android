@@ -71,4 +71,25 @@ interface MobileApiService {
     // GUS lookup
     @GET("api/mobile/gus/lookup/{nip}")
     suspend fun gusLookup(@Path("nip") nip: String): Response<GusLookupResponse>
+
+    // Speakers
+    @GET("api/mobile/events/{eventId}/speakers")
+    suspend fun getSpeakers(@Path("eventId") eventId: String): Response<SpeakersResponse>
+
+    @GET("api/mobile/events/{eventId}/speakers/{speakerId}")
+    suspend fun getSpeakerDetail(
+        @Path("eventId") eventId: String,
+        @Path("speakerId") speakerId: String
+    ): Response<SpeakerDto>
+
+    // Sponsors
+    @GET("api/mobile/events/{eventId}/sponsors")
+    suspend fun getSponsors(@Path("eventId") eventId: String): Response<EventSponsorsResponse>
+
+    @GET("api/mobile/events/{eventId}/sponsors/{eventSponsorId}")
+    suspend fun getSponsorDetail(
+        @Path("eventId") eventId: String,
+        @Path("eventSponsorId") eventSponsorId: Long
+    ): Response<SponsorDetailResponse>
 }
+
