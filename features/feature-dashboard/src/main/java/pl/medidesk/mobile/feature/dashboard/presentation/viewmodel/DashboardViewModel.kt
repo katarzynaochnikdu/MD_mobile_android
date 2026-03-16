@@ -113,7 +113,7 @@ class DashboardViewModel @Inject constructor(
                     totalWithQr = body?.totalWithQr ?: total,
                     checkedIn = checked,
                     walkIns = body?.walkIns ?: 0,
-                    checkInRate = body?.checkInRate ?: if (total > 0) (checked.toDouble() / total.toDouble() * 100.0) else 0.0,
+                    checkInRate = if (total > 0) (checked.toDouble() / total.toDouble() * 100.0) else 0.0,
                     byTicketClass = body?.byTicketClass?.map { TicketClassStat(it.ticketName, it.total, it.checkedIn) } ?: emptyList(),
                     timeline = body?.timeline?.map { TimelineEntry(it.hour, it.count) } ?: emptyList(),
                     topScanners = body?.topScanners?.map { ScannerStat(it.email, it.count) } ?: emptyList(),

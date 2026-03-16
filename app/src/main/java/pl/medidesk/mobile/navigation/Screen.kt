@@ -107,6 +107,19 @@ sealed class Screen(val route: String, val arguments: List<NamedNavArgument> = e
         fun createRoute(eventId: String, eventSponsorId: Long) = "sponsor_detail/$eventId/$eventSponsorId"
     }
 
+    data object Companies : Screen("companies/{eventId}?role={role}", listOf(
+        navArgument("eventId") { type = NavType.StringType },
+        navArgument("role") { type = NavType.StringType; defaultValue = "participant" }
+    )) {
+        fun createRoute(eventId: String, role: String = "participant") = "companies/$eventId?role=$role"
+    }
+
+    data object Orders : Screen("orders/{eventId}", listOf(
+        navArgument("eventId") { type = NavType.StringType }
+    )) {
+        fun createRoute(eventId: String) = "orders/$eventId"
+    }
+
     data object Settings : Screen("settings")
     data object Attractions : Screen("attractions")
 }

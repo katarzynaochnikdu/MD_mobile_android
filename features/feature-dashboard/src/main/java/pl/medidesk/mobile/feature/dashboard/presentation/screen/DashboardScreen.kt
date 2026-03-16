@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -34,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import pl.medidesk.mobile.core.ui.components.MdAsyncImage
 import pl.medidesk.mobile.core.model.*
 import pl.medidesk.mobile.core.ui.components.LoadingScreen
 import pl.medidesk.mobile.core.ui.theme.*
@@ -52,10 +53,15 @@ fun DashboardScreen(
     onNavigateToStats: () -> Unit,
     onNavigateToSpeakers: () -> Unit = {},
     onNavigateToSponsors: () -> Unit = {},
+    onNavigateToCompanies: () -> Unit = {},
+    onNavigateToOrders: () -> Unit = {},
+    onBackToEvents: () -> Unit = {},
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var forceOrganizerView by remember { mutableStateOf(false) }
+
+    LaunchedEffect(eventId) { viewModel.loadDashboard(eventId) }
 
     Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFFF8F9FA)) {
         when (val state = uiState) {
@@ -80,14 +86,18 @@ fun DashboardScreen(
                         onStatsClick = onNavigateToStats,
                         onSpeakersClick = onNavigateToSpeakers,
                         onSponsorsClick = onNavigateToSponsors,
-                        onSyncClick = { viewModel.triggerSync(eventId) }
+                        onCompaniesClick = onNavigateToCompanies,
+                        onOrdersClick = onNavigateToOrders,
+                        onSyncClick = { viewModel.triggerSync(eventId) },
+                        onBackToEvents = onBackToEvents
                     )
                 } else {
                     ParticipantDashboard(
                         data = state.data,
                         user = state.user,
                         onSyncClick = { viewModel.triggerSync(eventId) },
-                        onForceOrganizer = { forceOrganizerView = true }
+                        onForceOrganizer = { forceOrganizerView = true },
+                        onBackToEvents = onBackToEvents
                     )
                 }
             }
@@ -105,10 +115,13 @@ private fun OrganizerDashboard(
     onStatsClick: () -> Unit,
     onSpeakersClick: () -> Unit,
     onSponsorsClick: () -> Unit,
-    onSyncClick: () -> Unit
+    onCompaniesClick: () -> Unit,
+    onOrdersClick: () -> Unit,
+    onSyncClick: () -> Unit,
+    onBackToEvents: () -> Unit
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
-        item { DashboardHeader(data, "Panel Zarządzania") }
+        item { DashboardHeader(data, "Panel Zarządzania", onBackToEvents = onBackToEvents) }
         item { 
             Column(modifier = Modifier.padding(top = 16.dp)) {
                 ProgressCard(data)
@@ -127,18 +140,19 @@ private fun OrganizerDashboard(
         }
         item {
             Column(modifier = Modifier.padding(20.dp)) {
-                Text("Zarządzanie wydarzeniem", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 16.dp))
-                val items = listOf(
-                    ManagementItem("Uczestnicy", Icons.Default.Group, Color(0xFF3F51B5), { onParticipantsClick(null) }),
-                    ManagementItem("Firmy", Icons.Default.Business, Color(0xFF00BFA5), onSponsorsClick),
-                    ManagementItem("Sponsorzy", Icons.Default.Stars, Color(0xFFE91E63), onSponsorsClick),
-                    ManagementItem("Prelegenci", Icons.Default.RecordVoiceOver, Color(0xFF9C27B0), onSpeakersClick)
-                )
-                items.chunked(2).forEach { rowItems ->
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                        rowItems.forEach { item -> ManagementTile(item, Modifier.weight(1f)) }
-                    }
-                    Spacer(Modifier.height(16.dp))
+                // Section 1: Uczestnicy
+                Text("Uczestnicy", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ManagementTile(ManagementItem("Uczestnicy", Icons.Default.Group, Color(0xFF3F51B5), { onParticipantsClick(null) }), Modifier.weight(1f))
+                    ManagementTile(ManagementItem("Zamówienia", Icons.Default.ShoppingCart, Color(0xFFFF7043), onOrdersClick), Modifier.weight(1f))
+                    ManagementTile(ManagementItem("Firmy", Icons.Default.Business, Color(0xFF00BFA5), onCompaniesClick), Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(24.dp))
+                // Section 2: Współorganizatorzy
+                Text("Współorganizatorzy", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 12.dp))
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ManagementTile(ManagementItem("Prelegenci", Icons.Default.RecordVoiceOver, Color(0xFF9C27B0), onSpeakersClick), Modifier.weight(1f))
+                    ManagementTile(ManagementItem("Sponsorzy", Icons.Default.Stars, Color(0xFFE91E63), onSponsorsClick), Modifier.weight(1f))
                 }
             }
         }
@@ -147,9 +161,9 @@ private fun OrganizerDashboard(
 }
 
 @Composable
-private fun ParticipantDashboard(data: DashboardData, user: User, onSyncClick: () -> Unit, onForceOrganizer: () -> Unit) {
+private fun ParticipantDashboard(data: DashboardData, user: User, onSyncClick: () -> Unit, onForceOrganizer: () -> Unit, onBackToEvents: () -> Unit) {
     LazyColumn(modifier = Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
-        item { DashboardHeader(data, "Mój Panel") }
+        item { DashboardHeader(data, "Mój Panel", onBackToEvents = onBackToEvents) }
         item {
             Card(modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), colors = CardDefaults.cardColors(containerColor = Color.White), shape = RoundedCornerShape(24.dp), elevation = CardDefaults.cardElevation(4.dp)) {
                 Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -181,18 +195,90 @@ private fun ParticipantDashboard(data: DashboardData, user: User, onSyncClick: (
 }
 
 @Composable
-private fun DashboardHeader(data: DashboardData, subtitle: String) {
-    Box(modifier = Modifier.fillMaxWidth().height(200.dp)) {
-        AsyncImage(model = data.imageUrl ?: "https://placehold.co/600x400/152C5B/FFF?text=${data.eventName.take(1)}", contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-        Box(modifier = Modifier.fillMaxSize().background(Brush.verticalGradient(colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))))
-        Column(modifier = Modifier.align(Alignment.BottomStart).padding(20.dp)) {
+private fun DashboardHeader(data: DashboardData, subtitle: String, onBackToEvents: () -> Unit = {}) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF152C5B))
+        ) {
+            MdAsyncImage(
+                model = data.imageUrl,
+                contentDescription = data.eventName,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp, max = 240.dp),
+                contentScale = ContentScale.FillWidth,
+                initials = data.eventName.take(1),
+            )
+            // Gradient overlay for readability
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .align(Alignment.BottomCenter)
+                    .background(Brush.verticalGradient(colors = listOf(
+                        Color.Transparent,
+                        Color(0xFF152C5B).copy(alpha = 0.9f)
+                    )))
+            )
+            // Navigation buttons
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 8.dp, vertical = 8.dp)
+                    .align(Alignment.TopCenter),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                IconButton(
+                    onClick = onBackToEvents,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.Black.copy(alpha = 0.4f)
+                    )
+                ) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Wróć",
+                        tint = Color.White
+                    )
+                }
+                IconButton(
+                    onClick = onBackToEvents,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        containerColor = Color.Black.copy(alpha = 0.4f)
+                    )
+                ) {
+                    Icon(
+                        Icons.Default.ViewList,
+                        contentDescription = "Lista wydarzeń",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+        // Event info below the image
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color(0xFF152C5B))
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        ) {
             Text(text = data.eventName.ifEmpty { "Wydarzenie" }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = Color.White)
             Text(subtitle, color = Color(0xFF00BFA5), fontWeight = FontWeight.Medium, style = MaterialTheme.typography.bodySmall)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.CalendarToday, null, modifier = Modifier.size(14.dp), tint = Color.White.copy(alpha = 0.7f))
                 Spacer(Modifier.width(6.dp))
                 Text(formatDateLabel(data.startDate), style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
+            }
+            if (data.venue.isNotBlank()) {
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(14.dp), tint = Color.White.copy(alpha = 0.7f))
+                    Spacer(Modifier.width(6.dp))
+                    Text(data.venue, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha = 0.7f))
+                }
             }
         }
     }

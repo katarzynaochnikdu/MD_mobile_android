@@ -39,6 +39,8 @@
             <option value="$PROJECT_DIR$/features/feature-more" />
             <option value="$PROJECT_DIR$/features/feature-participants" />
             <option value="$PROJECT_DIR$/features/feature-scanner" />
+            <option value="$PROJECT_DIR$/features/feature-speakers" />
+            <option value="$PROJECT_DIR$/features/feature-sponsors" />
             <option value="$PROJECT_DIR$/features/feature-walkin" />
           </set>
         </option>

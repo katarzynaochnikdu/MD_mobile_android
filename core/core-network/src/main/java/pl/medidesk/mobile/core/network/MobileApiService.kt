@@ -91,5 +91,26 @@ interface MobileApiService {
         @Path("eventId") eventId: String,
         @Path("eventSponsorId") eventSponsorId: Long
     ): Response<SponsorDetailResponse>
+
+    // Companies
+    @GET("api/mobile/events/{eventId}/companies")
+    suspend fun getCompanies(
+        @Path("eventId") eventId: String,
+        @Query("role") role: String = "all"
+    ): Response<CompaniesResponse>
+
+    // Orders
+    @GET("api/mobile/events/{eventId}/orders")
+    suspend fun getOrders(
+        @Path("eventId") eventId: String
+    ): Response<OrdersResponse>
+
+    // Image Upload
+    @Multipart
+    @POST("api/mobile/upload-image")
+    suspend fun uploadImage(
+        @Part image: okhttp3.MultipartBody.Part,
+        @Part("context") context: okhttp3.RequestBody,
+    ): Response<ImageUploadResponse>
 }
 

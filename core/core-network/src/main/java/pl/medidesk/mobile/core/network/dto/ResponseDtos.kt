@@ -71,6 +71,7 @@ data class ParticipantDto(
     @Json(name = "attendance_status") val attendanceStatus: String?,
     @Json(name = "event_order_id") val eventOrderId: String?,
     @Json(name = "checked_in_at") val checkedInAt: String?,
+    @Json(name = "order_status") val orderStatus: String? = null,
     @Json(name = "is_walkin") val isWalkin: Boolean = false,
     val tags: List<String>? = null,
     @Json(name = "buyer_name") val buyerName: String? = null,
@@ -270,4 +271,79 @@ data class SponsorBenefitDto(
     val name: String,
     val status: String? = null,
     val category: String? = null
+)
+
+// Companies
+@JsonClass(generateAdapter = true)
+data class CompaniesResponse(
+    @Json(name = "event_id") val eventId: String,
+    @Json(name = "total_companies") val totalCompanies: Int,
+    val companies: List<CompanyDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class CompanyDto(
+    @Json(name = "company_name") val companyName: String,
+    val role: String,
+    @Json(name = "participant_count") val participantCount: Int,
+    @Json(name = "checked_in_count") val checkedInCount: Int,
+    val persons: List<CompanyPersonDto>? = null,
+    @Json(name = "logo_url") val logoUrl: String? = null,
+    @Json(name = "sponsor_company_id") val sponsorCompanyId: Long? = null,
+    @Json(name = "company_name_short") val companyNameShort: String? = null,
+    val industry: String? = null,
+    val website: String? = null,
+    @Json(name = "pipeline_status") val pipelineStatus: String? = null,
+    @Json(name = "ops_status") val opsStatus: String? = null,
+    @Json(name = "deal_type") val dealType: String? = null,
+    @Json(name = "contract_value") val contractValue: Double? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class CompanyPersonDto(
+    @Json(name = "first_name") val firstName: String? = null,
+    @Json(name = "last_name") val lastName: String? = null,
+    val email: String? = null,
+    val position: String? = null,
+    val phone: String? = null,
+    @Json(name = "ticket_class") val ticketClass: String? = null,
+    @Json(name = "checked_in") val checkedIn: Boolean? = null,
+    @Json(name = "order_status") val orderStatus: String? = null
+)
+
+// Orders
+@JsonClass(generateAdapter = true)
+data class OrdersResponse(
+    @Json(name = "event_id") val eventId: String,
+    @Json(name = "total_orders") val totalOrders: Int,
+    @Json(name = "paid_count") val paidCount: Int,
+    @Json(name = "total_revenue") val totalRevenue: Double,
+    val currency: String,
+    val orders: List<OrderDto>
+)
+
+@JsonClass(generateAdapter = true)
+data class OrderDto(
+    @Json(name = "event_order_id") val eventOrderId: String,
+    @Json(name = "purchaser_email") val purchaserEmail: String? = null,
+    @Json(name = "purchaser_name") val purchaserName: String? = null,
+    @Json(name = "purchaser_company") val purchaserCompany: String? = null,
+    @Json(name = "purchaser_nip") val purchaserNip: String? = null,
+    @Json(name = "payment_method") val paymentMethod: String? = null,
+    @Json(name = "promo_code") val promoCode: String? = null,
+    val total: Double = 0.0,
+    val currency: String = "PLN",
+    val status: String = "received",
+    val sandbox: Boolean = false,
+    @Json(name = "participant_count") val participantCount: Int = 0,
+    @Json(name = "checked_in_count") val checkedInCount: Int = 0,
+    @Json(name = "created_at") val createdAt: String? = null
+)
+
+// ─── Image Upload ───────────────────────────────────────────────────
+@JsonClass(generateAdapter = true)
+data class ImageUploadResponse(
+    val success: Boolean = false,
+    val url: String? = null,
+    val error: String? = null,
 )

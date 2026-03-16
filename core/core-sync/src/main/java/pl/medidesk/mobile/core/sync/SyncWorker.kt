@@ -123,6 +123,7 @@ class SyncWorker @AssistedInject constructor(
                 eventOrderId = dto.eventOrderId,
                 eventId = eventId,
                 checkedInAt = dto.checkedInAt,
+                orderStatus = dto.orderStatus,
                 isWalkin = dto.isWalkin,
                 tags = dto.tags?.joinToString(","),
                 buyerName = dto.buyerName,

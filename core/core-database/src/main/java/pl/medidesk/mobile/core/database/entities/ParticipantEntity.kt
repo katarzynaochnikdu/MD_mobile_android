@@ -27,6 +27,7 @@ data class ParticipantEntity(
     @ColumnInfo(name = "event_order_id") val eventOrderId: String?,
     @ColumnInfo(name = "event_id") val eventId: String,
     @ColumnInfo(name = "checked_in_at") val checkedInAt: String?,
+    @ColumnInfo(name = "order_status") val orderStatus: String? = null,
     @ColumnInfo(name = "is_walkin") val isWalkin: Boolean = false,
     val tags: String? = null, // Comma separated
     @ColumnInfo(name = "buyer_name") val buyerName: String? = null,

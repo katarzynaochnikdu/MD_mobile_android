@@ -12,5 +12,4 @@ dependencies {
     implementation(libs.lifecycle.runtime.compose)
     implementation(libs.navigation.compose)
     implementation(libs.hilt.navigation.compose)
-    implementation(libs.coil.compose)
 }

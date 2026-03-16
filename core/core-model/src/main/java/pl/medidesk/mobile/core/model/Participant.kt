@@ -15,6 +15,7 @@ data class Participant(
     val eventOrderId: String?,
     val eventId: String,
     val checkedInAt: String?,
+    val orderStatus: String? = null,
     val isWalkin: Boolean = false,
     val tags: List<String> = emptyList(),
     val buyerName: String? = null,

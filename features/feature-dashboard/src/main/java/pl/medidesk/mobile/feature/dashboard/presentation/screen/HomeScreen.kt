@@ -80,6 +80,7 @@ fun HomeScreen(
                 columns = GridCells.Fixed(2),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(bottom = 16.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 items(menuItems) { item -> HomeMenuTile(item) }
@@ -106,7 +107,7 @@ data class HomeMenuItem(val title: String, val icon: ImageVector, val color: Col
 
 @Composable
 private fun HomeMenuTile(item: HomeMenuItem) {
-    Card(onClick = item.onClick, modifier = Modifier.fillMaxWidth().height(150.dp), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+    Card(onClick = item.onClick, modifier = Modifier.fillMaxWidth().height(130.dp), shape = RoundedCornerShape(28.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(modifier = Modifier.fillMaxSize().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Surface(modifier = Modifier.size(56.dp), shape = CircleShape, color = item.color.copy(alpha = 0.1f)) {
                 Icon(imageVector = item.icon, contentDescription = null, modifier = Modifier.padding(14.dp).size(28.dp), tint = item.color)

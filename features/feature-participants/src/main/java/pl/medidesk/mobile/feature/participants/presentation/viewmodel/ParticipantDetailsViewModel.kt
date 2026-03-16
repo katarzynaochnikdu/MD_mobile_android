@@ -58,7 +58,11 @@ class ParticipantDetailsViewModel @Inject constructor(
                             eventOrderId = entity.eventOrderId,
                             eventId = entity.eventId,
                             checkedInAt = entity.checkedInAt,
-                            isWalkin = entity.isWalkin
+                            orderStatus = entity.orderStatus,
+                            isWalkin = entity.isWalkin,
+                            tags = entity.tags?.split(",")?.filter { it.isNotBlank() } ?: emptyList(),
+                            buyerName = entity.buyerName,
+                            buyerEmail = entity.buyerEmail
                         )
                     )
                 } else {

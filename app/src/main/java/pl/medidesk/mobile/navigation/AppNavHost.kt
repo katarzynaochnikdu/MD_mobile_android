@@ -24,7 +24,9 @@ import androidx.compose.ui.Modifier
 import pl.medidesk.mobile.feature.auth.presentation.screen.LoginScreen
 import pl.medidesk.mobile.feature.auth.presentation.screen.RoleSelectionScreen
 import pl.medidesk.mobile.feature.dashboard.presentation.screen.DashboardScreen
+import pl.medidesk.mobile.feature.dashboard.presentation.screen.CompaniesScreen
 import pl.medidesk.mobile.feature.dashboard.presentation.screen.HomeScreen
+import pl.medidesk.mobile.feature.dashboard.presentation.screen.OrdersScreen
 import pl.medidesk.mobile.feature.dashboard.presentation.screen.StatsScreen
 import pl.medidesk.mobile.feature.events.presentation.screen.EventsScreen
 import pl.medidesk.mobile.feature.inhub.presentation.screen.InHubScreen
@@ -101,17 +103,21 @@ fun AppNavHost() {
             arguments = Screen.Main.arguments
         ) { backStackEntry ->
             val eventId = backStackEntry.arguments?.getString("eventId") ?: return@composable
-            MainScreen(eventId = eventId, onLogout = {
-                navController.navigate(Screen.Home.route) {
-                    popUpTo(Screen.Home.route) { inclusive = true }
-                }
-            })
+            MainScreen(
+                eventId = eventId,
+                onLogout = {
+                    navController.navigate(Screen.Home.route) {
+                        popUpTo(Screen.Home.route) { inclusive = true }
+                    }
+                },
+                onBackToEvents = { navController.popBackStack() }
+            )
         }
     }
 }
 
 @Composable
-private fun MainScreen(eventId: String, onLogout: () -> Unit) {
+private fun MainScreen(eventId: String, onLogout: () -> Unit, onBackToEvents: () -> Unit) {
     val innerNav = rememberNavController()
     val navBackStackEntry by innerNav.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -162,7 +168,10 @@ private fun MainScreen(eventId: String, onLogout: () -> Unit) {
                     onNavigateToInHub = { innerNav.navigate(Screen.InHub.createRoute(eventId)) },
                     onNavigateToStats = { innerNav.navigate(Screen.Stats.createRoute(eventId)) },
                     onNavigateToSpeakers = { innerNav.navigate(Screen.Speakers.createRoute(eventId)) },
-                    onNavigateToSponsors = { innerNav.navigate(Screen.Sponsors.createRoute(eventId)) }
+                    onNavigateToSponsors = { innerNav.navigate(Screen.Sponsors.createRoute(eventId)) },
+                    onNavigateToCompanies = { innerNav.navigate(Screen.Companies.createRoute(eventId, "participant")) },
+                    onNavigateToOrders = { innerNav.navigate(Screen.Orders.createRoute(eventId)) },
+                    onBackToEvents = onBackToEvents
                 )
             }
             
@@ -270,6 +279,30 @@ private fun MainScreen(eventId: String, onLogout: () -> Unit) {
                 arguments = Screen.SponsorDetail.arguments
             ) {
                 SponsorDetailScreen(
+                    onNavigateBack = { innerNav.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.Companies.route,
+                arguments = Screen.Companies.arguments
+            ) { backStackEntry ->
+                val role = backStackEntry.arguments?.getString("role") ?: "participant"
+                val title = if (role == "sponsor") "Sponsorzy — Firmy" else "Firmy — Uczestnicy"
+                CompaniesScreen(
+                    eventId = eventId,
+                    role = role,
+                    title = title,
+                    onNavigateBack = { innerNav.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.Orders.route,
+                arguments = Screen.Orders.arguments
+            ) {
+                OrdersScreen(
+                    eventId = eventId,
                     onNavigateBack = { innerNav.popBackStack() }
                 )
             }

@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import pl.medidesk.mobile.core.ui.components.MdAsyncImage
 import pl.medidesk.mobile.core.model.EventItem
 import pl.medidesk.mobile.core.ui.components.ErrorScreen
 import pl.medidesk.mobile.core.ui.components.LoadingScreen
@@ -105,21 +105,30 @@ private fun MonthHeader(group: UiEventGroup) {
 
 @Composable
 private fun EventGridCard(event: EventItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Card(onClick = onClick, modifier = modifier.height(210.dp), shape = RoundedCornerShape(8.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
+    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(8.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)) {
         Column {
-            AsyncImage(
-                model = event.imageUrl ?: "https://placehold.co/600x400/00BFA5/FFF?text=${event.eventName.take(1)}",
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().height(110.dp),
-                contentScale = ContentScale.Crop
+            MdAsyncImage(
+                model = event.imageUrl,
+                contentDescription = event.eventName,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp, max = 140.dp),
+                contentScale = ContentScale.FillWidth,
+                initials = event.eventName.take(1),
             )
             Column(modifier = Modifier.padding(10.dp)) {
                 Text(event.eventName, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 2, minLines = 2, color = Color(0xFF1A1C1E))
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(6.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Default.CalendarToday, null, modifier = Modifier.size(12.dp), tint = Color.Gray)
                     Spacer(Modifier.width(4.dp))
                     Text(formatDateLabel(event.startDate), fontSize = 10.sp, color = Color.Gray)
+                }
+                if (event.venue.isNotBlank()) {
+                    Spacer(Modifier.height(3.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocationOn, null, modifier = Modifier.size(12.dp), tint = Color.Gray)
+                        Spacer(Modifier.width(4.dp))
+                        Text(event.venue, fontSize = 10.sp, color = Color.Gray, maxLines = 1)
+                    }
                 }
             }
         }
@@ -130,7 +139,7 @@ private fun EventGridCard(event: EventItem, onClick: () -> Unit, modifier: Modif
 private fun EventListCard(event: EventItem, onClick: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth().height(90.dp), shape = RoundedCornerShape(8.dp), colors = CardDefaults.cardColors(containerColor = Color.White), elevation = CardDefaults.cardElevation(1.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = event.imageUrl ?: "https://placehold.co/600x400/00BFA5/FFF?text=${event.eventName.take(1)}", contentDescription = null, modifier = Modifier.size(90.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop)
+            MdAsyncImage(model = event.imageUrl, contentDescription = event.eventName, modifier = Modifier.size(90.dp).clip(RoundedCornerShape(8.dp)), contentScale = ContentScale.Crop, initials = event.eventName.take(1))
             Column(modifier = Modifier.padding(12.dp).weight(1f)) {
                 Text(event.eventName, fontWeight = FontWeight.Bold, fontSize = 14.sp, maxLines = 1, color = Color(0xFF1A1C1E))
                 Text(formatDateLabel(event.startDate), fontSize = 11.sp, color = Color.Gray)
