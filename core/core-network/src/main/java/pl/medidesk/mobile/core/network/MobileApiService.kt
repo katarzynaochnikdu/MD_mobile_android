@@ -105,6 +105,22 @@ interface MobileApiService {
         @Path("eventId") eventId: String
     ): Response<OrdersResponse>
 
+    @POST("api/mobile/orders/{orderId}/status")
+    suspend fun updateOrderStatus(
+        @Path("orderId") orderId: String,
+        @Body request: OrderStatusUpdateRequest
+    ): Response<GenericActionResponse>
+
+    @POST("api/mobile/orders/{orderId}/resend-ticket")
+    suspend fun resendTickets(
+        @Path("orderId") orderId: String
+    ): Response<GenericActionResponse>
+
+    @POST("api/mobile/orders/{orderId}/send-reminder")
+    suspend fun sendReminder(
+        @Path("orderId") orderId: String
+    ): Response<GenericActionResponse>
+
     // Image Upload
     @Multipart
     @POST("api/mobile/upload-image")

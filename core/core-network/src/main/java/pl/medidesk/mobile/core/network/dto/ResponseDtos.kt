@@ -347,3 +347,11 @@ data class ImageUploadResponse(
     val url: String? = null,
     val error: String? = null,
 )
+
+@JsonClass(generateAdapter = true)
+data class GenericActionResponse(
+    val success: Boolean,
+    val error: String? = null,
+    val status: String? = null,
+    val message: String? = null
+)

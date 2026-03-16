@@ -63,3 +63,8 @@ data class InHubConfigRequest(
 data class VerifyPinRequest(
     val pin: String
 )
+
+@JsonClass(generateAdapter = true)
+data class OrderStatusUpdateRequest(
+    val status: String
+)
