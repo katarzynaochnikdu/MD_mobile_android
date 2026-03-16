@@ -147,7 +147,7 @@ fun ParticipantsScreen(
                 // Filter icon with badge when active
                 BadgedBox(
                     badge = {
-                        if (isFilterActive) Badge(containerColor = Color(0xFF152C5B))
+                        if (isFilterActive) Badge(containerColor = Color(0xFFE53935))
                     }
                 ) {
                     IconButton(
